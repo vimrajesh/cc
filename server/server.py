@@ -1,4 +1,5 @@
 import socket
+import uuid
 import hashlib
 import threading
 import logging
@@ -9,7 +10,22 @@ client_ip = '192.168.122.1'
 client_port = 5002
 server_ready_port = 5000
 server_port = 5001
+ 
+def hash_license_number(license_number):
+    # uuid is used to generate a random number
+    salt = uuid.uuid4().hex
+    return hashlib.sha256(salt.encode() + license_number.encode()).hexdigest() + ':' + salt
+    
+def check_license_number(hashed_license_number, user_license_number):
+    license_number, salt = hashed_license_number.split(':')
+    return license_number == hashlib.sha256(salt.encode() + user_license_number.encode()).hexdigest()
 
+def verify_license_numbers_n_times(license_number, n):
+    h = hash_license_number(license_number)
+    l = []
+    while(n):
+        l.append(check_license_number(h, license_number))
+    return f"{h}"
 
 def calculate_collision_string(data):
     h = lambda x: hashlib.sha256(x.encode('utf-8')).hexdigest()
@@ -66,9 +82,9 @@ class Worker(threading.Thread):
             conn, address = receive_socket.accept()
             ip = address[0]
             work = conn.recv(1024).decode()
-            logging.info(f'Received work from {ip}: {work}')
+            logging.info(f'Received License Number {work} from {ip} address.')
             conn.close()
-            result = self.function(work)
+            result = self.function(work, 1000000)
             self.send_result(result)
         receive_socket.close()
 
@@ -76,7 +92,9 @@ class Worker(threading.Thread):
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s: %(message)s', filename='log',
                         filemode='a')
+    worker = Worker(server_port, client_ip, client_port, verify_license_numbers_n_times)
     worker = Worker(server_port, client_ip, client_port, calculate_collision_string)
+
     worker.start()
     time.sleep(1)
     notify_client(client_ip, server_ready_port)

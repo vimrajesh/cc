@@ -10,6 +10,43 @@ import argparse
 import numpy as np
 import random
 
+# Work provided to servers are to store the license plate
+# number safely and also cross verify the hash
+def generate_random_license_plate():
+    license_plate_initials = ["AN", "AP", "AR", "AS", 
+                    "BH", "BR", "CH", "CG", "DD", 
+                    "DL", "GA", "GJ", "HR", "HP", 
+                    "JK", "JH", "KA", "KL", "LA", 
+                    "LD", "MP", "MH", "MN", "ML", 
+                    "MZ", "NL", "OD", "PY", "PB", 
+                    "RJ", "SK", "TN", "TS", "TR", 
+                    "UP", "UK", "WB"]
+    # taking template as 2 origin chars 2 digits 2 chars 4 digits
+    string1 = "ABCDEFGHJKLMNPQRSTUVWXYZ"
+    string2 = "1234567890"
+    len1 = len(string1)
+    len2 = len(string2)
+    origin_length = 
+    license_number = ""
+    
+    # Get origin of license plate
+    index = random.randint(0, origin_length - 1)
+    license_number += license_plate_initials[index]
+
+    license_number += "-"
+    for i in range(2):
+        index = random.randint(0, len2 - 1)
+        license_number += string2[index]
+    license_number += "-"
+    for i in range(2):
+        index = random.randint(0, len1 - 1)
+        license_number += string1[index]
+    license_number += "-"
+    for i in range(4):
+        index = random.randint(0, len2 - 1)
+        license_number += string2[index]
+    return license_number
+
 # VM Definition
 # VM contains the following attributes
 # Name: Unique Name for the VM
@@ -78,7 +115,7 @@ class ReceiveResult(threading.Thread):
 			conn, address = skt.accept()
 			ip = str(address[0])
 			data = conn.recv(1024).decode()
-			logging.info(f"Received response {data} from {servers[ip].name}")
+			logging.info(f"Received stored hashed response {data} from {servers[ip].name}")
 			servers_lock.acquire()
 			servers[ip].state = VMState.IDLE
 			servers_lock.release()
@@ -96,7 +133,7 @@ class SendWork(threading.Thread):
 		global servers, servers_lock, running
 		i = 1
 		while running:
-			word = 'word' + str(i)
+			word = generate_random_license_plate()
 			done = False
 			logging.debug('Searching for idle server...')
 			while not done:
@@ -115,7 +152,7 @@ class SendWork(threading.Thread):
 							continue
 						skt.send(word.encode())
 						servers[ip].state = VMState.BUSY
-						logging.info(f"Sent work to {vm.name}: {word}")
+						logging.info(f"Sent License Number {word} to {vm.name} VM.")
 						skt.close()
 						done = True
 						break
