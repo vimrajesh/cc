@@ -93,7 +93,7 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s: %(message)s', filename='log',
                         filemode='a')
     worker = Worker(server_port, client_ip, client_port, verify_license_numbers_n_times)
-    worker = Worker(server_port, client_ip, client_port, calculate_collision_string)
+    # worker = Worker(server_port, client_ip, client_port, calculate_collision_string)
 
     worker.start()
     time.sleep(1)

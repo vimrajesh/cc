@@ -26,7 +26,7 @@ def generate_random_license_plate():
     string2 = "1234567890"
     len1 = len(string1)
     len2 = len(string2)
-    origin_length = 
+    origin_length = len(license_plate_initials)
     license_number = ""
     
     # Get origin of license plate
