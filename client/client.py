@@ -252,7 +252,8 @@ class VMManager(threading.Thread):
 					running_vm += 1
 			servers_lock.release()
 			if running_vm == 0 and client_state == ClientState.CONSTANT:
-				logging.info(f'No running VM, starting new server...')
+				logging.info(f'No VM currently active.')
+				logging.info("Starting new Server instance.")
 				self.boot_new_server()
 				client_state = ClientState.BOOTING
 				logging.debug('Client state: booting')
@@ -278,7 +279,7 @@ class VMManager(threading.Thread):
 
 			logging.info(f'average CPU load: {int(average_load)}%')
 			if average_load > self.cpu_thresh and client_state == ClientState.CONSTANT:
-				logging.info(f'Detected high load, starting new server...')
+				logging.info(f'High load detected on a VM, starting a new Server Instance.')
 				self.boot_new_server()
 				client_state = ClientState.BOOTING
 				logging.debug('Client state: booting')
@@ -320,8 +321,12 @@ if __name__ == '__main__':
 	vm_manager.start()
 
 	logging.info("Hello User. Work will be given to the VMs.")
-
+	
+	zz = 0
 	while True:
+		zz += 1
+		if zz%100000 == 0:
+			print("If you want to exit the program, kindly type 'terminate' without the quotes.")
 		inp = input()
 		if inp == 'terminate':
 			logging.info('Command received to terminate the process.')

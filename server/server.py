@@ -53,7 +53,8 @@ def notify_client(client_ip, server_ready_port):
     skt = socket.socket()
     skt.connect((client_ip, server_ready_port))
     skt.send(socket.gethostname().encode())
-    logging.info(f'Notified client of the new server')
+    logging.info(f'Notified client of the new VM server.')
+    logging.info(f'Listening for hashing license plates.')
     skt.close()
 
 
@@ -71,7 +72,7 @@ class Worker(threading.Thread):
         send_socket = socket.socket()
         send_socket.connect((self.client_ip, self.client_port))
         send_socket.send(result.encode())
-        logging.info(f'Sent to client ip {client_ip} result {result}')
+        logging.info(f'Sent to client ip {client_ip} the following hashed result: {result}')
         send_socket.close()
 
     def run(self):
@@ -79,7 +80,7 @@ class Worker(threading.Thread):
         receive_socket.bind(('0.0.0.0', self.receive_port))
         receive_socket.listen(1)
         while True:
-            logging.info(f'Listening for work')
+            logging.info(f'Awaiting client work request.')
             conn, address = receive_socket.accept()
             ip = address[0]
             work = conn.recv(1024).decode()
