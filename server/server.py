@@ -20,12 +20,12 @@ def check_license_number(hashed_license_number, user_license_number):
     license_number, salt = hashed_license_number.split(':')
     return license_number == hashlib.sha256(salt.encode() + user_license_number.encode()).hexdigest()
 
-def verify_license_numbers_n_times(license_number, n):
+def verify_license_numbers_n_times(license_number, n = 1):
     h = hash_license_number(license_number)
     l = []
     while(n):
         l.append(check_license_number(h, license_number))
-    return f"{h}"
+    return h
 
 def calculate_collision_string(data):
     h = lambda x: hashlib.sha256(x.encode('utf-8')).hexdigest()
@@ -59,12 +59,13 @@ def notify_client(client_ip, server_ready_port):
 
 class Worker(threading.Thread):
 
-    def __init__(self, receive_port, client_ip, client_port, function):
+    def __init__(self, receive_port, client_ip, client_port, function, function2):
         threading.Thread.__init__(self)
         self.receive_port = receive_port
         self.client_ip = client_ip
         self.client_port = client_port
         self.function = function
+        self.function2 = function2
 
     def send_result(self, result):
         send_socket = socket.socket()
@@ -84,15 +85,17 @@ class Worker(threading.Thread):
             work = conn.recv(1024).decode()
             logging.info(f'Received License Number {work} from {ip} address.')
             conn.close()
-            result = self.function(work, 1000000)
-            self.send_result(result)
+            # result = self.function(work, 1)
+            h = hash_license_number(work)
+            result = self.function2(work)
+            self.send_result(h)
         receive_socket.close()
 
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s: %(message)s', filename='log',
                         filemode='a')
-    worker = Worker(server_port, client_ip, client_port, verify_license_numbers_n_times)
+    worker = Worker(server_port, client_ip, client_port, verify_license_numbers_n_times, calculate_collision_string)
     # worker = Worker(server_port, client_ip, client_port, calculate_collision_string)
 
     worker.start()
